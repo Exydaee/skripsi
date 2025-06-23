@@ -24,7 +24,11 @@ from sklearn.impute import SimpleImputer
 
 # Load Data
 
-df = pd.read_csv('/content/drive/MyDrive/Data Murid/Kelas_7.csv', delimiter=';')
+uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file, delimiter=';')  # atau ',' jika file kamu pakai koma
+    st.write(df.head())
+
 
 # Tampilkan beberapa data untuk cek
 print(df.head())
