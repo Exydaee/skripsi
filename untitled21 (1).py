@@ -1,91 +1,143 @@
+# Streamlit Web App Lengkap: Klasterisasi Siswa dengan K-Means & K-Medoids
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import davies_bouldin_score
-from pyclustering.cluster.kmedoids import kmedoids
-from pyclustering.utils import calculate_distance_matrix
 from sklearn.impute import SimpleImputer
-import random
+from sklearn_extra.cluster import KMedoids
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.colors as mcolors
 
-st.set_page_config(layout="wide")
-st.title("Aplikasi Klasterisasi Nilai Siswa (K-Means & K-Medoids)")
+st.set_page_config(page_title="Klasterisasi Siswa SMP", layout="wide")
+st.title("Klasterisasi Siswa SMP Berdasarkan Nilai Rapor")
 
-uploaded_file = st.file_uploader("Upload file CSV siswa (delimiter ;)", type=["csv"])
+# Upload CSV
+uploaded_file = st.file_uploader("Upload file CSV nilai siswa", type=["csv"])
 
 if uploaded_file is not None:
+    # Baca dan bersihkan data
     df = pd.read_csv(uploaded_file, delimiter=';')
 
-    # Preprocessing
-    for col in df.select_dtypes(include=['object']).columns:
+    # Ganti koma jadi titik, '-' jadi NaN, dan konversi ke float
+    for col in df.select_dtypes(include='object').columns:
         try:
             df[col] = df[col].str.replace('-', 'NaN').str.replace(',', '.').astype(float)
         except:
             pass
 
+    # Imputasi nilai kosong
     imputer = SimpleImputer(strategy='mean')
     df[df.columns] = imputer.fit_transform(df)
 
+    # Hitung Pengetahuan dan Keterampilan
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
-    df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
+    df["Keterampilan_Tertinggi"] = df[["PRK", "SBDY", "PNJ"]].max(axis=1)
 
-    def keterampilan_tertinggi(row):
-        nilai = {k: row[k] for k in ["PNJ", "SBDY", "PRK"] if pd.notna(row[k])}
-        return max(nilai, key=nilai.get) if nilai else np.nan
-
-    df["Keterampilan_Tertinggi"] = df.apply(keterampilan_tertinggi, axis=1)
-
-    # Fitur klasterisasi
-    X = df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]]
+    fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Keterampilan_Tertinggi"]
+    X = df[fitur]
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Pilih jumlah klaster
-    k = st.slider("Pilih jumlah klaster (K)", 2, 10, 3)
+    st.subheader("Pilih Jumlah Klaster")
+    k = st.slider("Jumlah Klaster", 2, 10, 3)
 
     # K-Means
-    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
-    df["Cluster_KMeans"] = kmeans.fit_predict(X_scaled)
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    df["Klaster_KMeans"] = kmeans.fit_predict(X_scaled)
 
     # K-Medoids
-    initial_medoids = random.sample(range(len(X_scaled)), k)
-    kmedoids_instance = kmedoids(data=X_scaled, initial_index_medoids=initial_medoids, method="pam")
-    kmedoids_instance.process()
-    clusters = kmedoids_instance.get_clusters()
+    kmedoids = KMedoids(n_clusters=k, random_state=42)
+    df["Klaster_KMedoids"] = kmedoids.fit_predict(X_scaled)
 
-    labels_kmedoids = np.zeros(len(X_scaled), dtype=int)
-    for cid, cluster in enumerate(clusters):
-        for idx in cluster:
-            labels_kmedoids[idx] = cid
-    df["Cluster_KMedoids"] = labels_kmedoids
+    # DBI
+    dbi_kmeans = davies_bouldin_score(X_scaled, df["Klaster_KMeans"])
+    dbi_kmedoids = davies_bouldin_score(X_scaled, df["Klaster_KMedoids"])
 
-    # Evaluasi DBI
-    dbi_kmeans = davies_bouldin_score(X_scaled, df["Cluster_KMeans"])
-    dbi_kmedoids = davies_bouldin_score(X_scaled, df["Cluster_KMedoids"])
+    # Predikat Akademik
+    def klasifikasi_predikat(sains, sosial, keterampilan):
+        rata2 = (sains + sosial + keterampilan) / 3
+        if rata2 >= 90:
+            return "Sangat Baik"
+        elif rata2 >= 80:
+            return "Baik"
+        elif rata2 >= 70:
+            return "Cukup"
+        else:
+            return "Perlu Bimbingan"
 
-    st.subheader("Evaluasi Davies-Bouldin Index")
-    st.write(f"K-Means DBI: {dbi_kmeans:.4f}")
-    st.write(f"K-Medoids DBI: {dbi_kmedoids:.4f}")
+    df["Predikat"] = df.apply(lambda row: klasifikasi_predikat(
+        row["Pengetahuan_Sains"], row["Pengetahuan_Sosial"], row["Keterampilan_Tertinggi"]), axis=1)
 
-    # Visualisasi 3D
-    st.subheader("Visualisasi 3D Klaster")
-    fig = plt.figure(figsize=(10, 5))
+    # Gabungan Pengetahuan + Keterampilan
+    df["Gabungan"] = df.apply(
+        lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {['PRK', 'SBDY', 'PNJ'][np.argmax([row['PRK'], row['SBDY'], row['PNJ']])]}" if not pd.isna(row['PRK']) and not pd.isna(row['SBDY']) and not pd.isna(row['PNJ']) else "-",
+        axis=1
+    )
+
+    st.subheader("Tabel dan Evaluasi")
+    st.write(f"**Davies-Bouldin Index K-Means:** {dbi_kmeans:.4f}")
+    st.write(f"**Davies-Bouldin Index K-Medoids:** {dbi_kmedoids:.4f}")
+    st.dataframe(df[fitur + ["Klaster_KMeans", "Klaster_KMedoids", "Predikat", "Gabungan"]])
+
+    st.subheader("Visualisasi 2D")
+    col1, col2 = st.columns(2)
+    with col1:
+        fig1, ax1 = plt.subplots()
+        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMeans"], palette="tab10", ax=ax1)
+        ax1.set_title("K-Means Clustering")
+        st.pyplot(fig1)
+
+    with col2:
+        fig2, ax2 = plt.subplots()
+        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMedoids"], palette="Set2", ax=ax2)
+        ax2.set_title("K-Medoids Clustering")
+        st.pyplot(fig2)
+
+    st.subheader("Visualisasi 3D")
+    fig = plt.figure(figsize=(12, 5))
     ax = fig.add_subplot(121, projection='3d')
-    ax.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Nilai_Keterampilan_Tertinggi"],
-               c=df["Cluster_KMeans"], cmap='viridis', s=60)
-    ax.set_title("K-Means")
+    ax.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMeans"], cmap="tab10")
+    ax.set_title("K-Means 3D")
+    ax.set_xlabel("Sains")
+    ax.set_ylabel("Sosial")
+    ax.set_zlabel("Keterampilan")
 
     ax2 = fig.add_subplot(122, projection='3d')
-    ax2.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Nilai_Keterampilan_Tertinggi"],
-                c=df["Cluster_KMedoids"], cmap='plasma', s=60)
-    ax2.set_title("K-Medoids")
+    ax2.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMedoids"], cmap="Set2")
+    ax2.set_title("K-Medoids 3D")
+    ax2.set_xlabel("Sains")
+    ax2.set_ylabel("Sosial")
+    ax2.set_zlabel("Keterampilan")
     st.pyplot(fig)
 
-    # Tabel hasil akhir
-    st.subheader("Tabel Hasil Klaster")
-    st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi",
-                    "Keterampilan_Tertinggi", "Cluster_KMeans", "Cluster_KMedoids"]])
+    st.subheader("Distribusi Pie Chart")
+    fig3, ax3 = plt.subplots()
+    df["Klaster_KMeans"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax3)
+    ax3.set_ylabel("")
+    ax3.set_title("Distribusi KMeans")
+    st.pyplot(fig3)
+
+    fig4, ax4 = plt.subplots()
+    df["Klaster_KMedoids"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax4)
+    ax4.set_ylabel("")
+    ax4.set_title("Distribusi KMedoids")
+    st.pyplot(fig4)
+
+    fig5, ax5 = plt.subplots()
+    df["Gabungan"].value_counts().plot.pie(autopct='%1.1f%%', ax=ax5, colors=plt.cm.Paired.colors)
+    ax5.set_ylabel("")
+    ax5.set_title("Gabungan Pengetahuan & Keterampilan")
+    st.pyplot(fig5)
+
+    st.subheader("Unduh Hasil")
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button("Download CSV", csv, "hasil_klasterisasi.csv", "text/csv")
+
+else:
+    st.info("Silakan upload file CSV terlebih dahulu.")
