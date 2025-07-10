@@ -28,7 +28,7 @@ padding: 2rem;
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.set_page_config(page_title="Student Clustering", layout="wide")
-st.title("📊 Visualisasi Klasterisasi Nilai Siswa Menggunakan K-Means dan K-Medoids")
+st.title("📊 Student Performance Clustering")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** dan **K-Medoids** secara bersamaan.")
 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
@@ -41,11 +41,12 @@ if uploaded_file is not None:
         st.write("### Data Awal", df.head())
 
     # Preprocessing
-    for col in df.select_dtypes(include=['object']).columns:
-        try:
-            df[col] = df[col].str.replace('-', 'NaN').str.replace(',', '.').astype(float)
-        except:
-            pass
+for col in df.select_dtypes(include=['object']).columns:
+    df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
+    try:
+        df[col] = df[col].astype(float)
+    except:
+        pass
 
     imputer = SimpleImputer(strategy='mean')
     df[df.columns] = imputer.fit_transform(df)
