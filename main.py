@@ -112,7 +112,8 @@ if uploaded_file is not None:
             ax2.set_xlabel('Pengetahuan_Sains', labelpad=15)
             ax2.set_ylabel('Pengetahuan_Sosial', labelpad=15)
             ax2.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="upper center", bbox_to_anchor=(0.5, 1.15))
+            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
+            plt.tight_layout()
             st.pyplot(fig2)
 
         with col2:
@@ -128,7 +129,8 @@ if uploaded_file is not None:
             ax4.set_xlabel('Pengetahuan_Sains', labelpad=15)
             ax4.set_ylabel('Pengetahuan_Sosial', labelpad=15)
             ax4.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="upper center", bbox_to_anchor=(0.5, 1.15))
+            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
+            plt.tight_layout()
             st.pyplot(fig4)
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
