@@ -97,9 +97,11 @@ if uploaded_file is not None:
         initial_medoids = list(range(k))
         kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
         kmedoids_instance.process()
-        final_medoids = kmedoids_instance.get_medoids()
-        labels_medoid = np.argmin([[np.linalg.norm(X_scaled[i] - X_scaled[m]) for m in final_medoids] for i in range(len(X_scaled))], axis=1)
-        df['Cluster_KMedoids'] = labels_medoid.astype(int)
+        labels_medoid = np.empty(len(X_scaled), dtype=int)
+        for cluster_id, cluster_indices in enumerate(kmedoids_instance.get_clusters()):
+            for idx in cluster_indices:
+                labels_medoid[idx] = cluster_id
+        df['Cluster_KMedoids'] = labels_medoid
         dbi_kmedoids = davies_bouldin_score(X_scaled, df['Cluster_KMedoids'])
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
