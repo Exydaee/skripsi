@@ -35,7 +35,10 @@ uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
-    st.write("### Data Awal", df.head())
+    if 'Cluster_KMeans' in df.columns and 'Cluster_KMedoids' in df.columns:
+        st.write("### Data dengan Hasil Klasterisasi", df[[*fitur, 'Cluster_KMeans', 'Cluster_KMedoids']].head())
+    else:
+        st.write("### Data Awal", df.head())
 
     # Preprocessing
     for col in df.select_dtypes(include=['object']).columns:
