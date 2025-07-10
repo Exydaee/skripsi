@@ -211,5 +211,8 @@ ax_pie.axis('equal')
 plt.tight_layout()
 st.pyplot(fig_pie)
 
+# Jika belum ada file diunggah
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
+
+
