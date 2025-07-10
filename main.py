@@ -199,17 +199,17 @@ if uploaded_file is not None:
         
 
         fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
-        ax_pie.pie(
-            gabungan_counts.values,
-            labels=gabungan_counts.index,
-            autopct='%1.1f%%',
-            startangle=90,
-            colors=plt.cm.Paired.colors
-        )
-        ax_pie.axis('equal')
-        plt.title('Distribusi Gabungan Pengetahuan dan Keterampilan Tertinggi Siswa', pad=30)
-        plt.tight_layout()
-        st.pyplot(fig_pie)
+total = gabungan_counts.sum()
+labels_with_pct = [f"{label} ({value / total:.1%})" for label, value in zip(gabungan_counts.index, gabungan_counts.values)]
+ax_pie.pie(
+    gabungan_counts.values,
+    labels=labels_with_pct,
+    startangle=90,
+    colors=plt.cm.Paired.colors
+)
+ax_pie.axis('equal')
+plt.tight_layout()
+st.pyplot(fig_pie)
 
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
