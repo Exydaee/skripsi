@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seab as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import davies_bouldin_score
 from sklearn.cluster import KMeans
