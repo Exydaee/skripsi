@@ -94,19 +94,19 @@ if uploaded_file is not None:
         df['Cluster_KMeans'] = kmeans.labels_
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
-        data_size = X_scaled.shape[0]
-random.seed(42)
-initial_medoids = random.sample(range(data_size), k)
-kmedoids_instance = kmedoids(data=X_scaled, initial_index_medoids=initial_medoids, method="pam")
-kmedoids_instance.process()
+                data_size = X_scaled.shape[0]
+        random.seed(42)
+        initial_medoids = random.sample(range(data_size), k)
+        kmedoids_instance = kmedoids(data=X_scaled, initial_index_medoids=initial_medoids, method="pam")
+        kmedoids_instance.process()
 
-clusters = kmedoids_instance.get_clusters()
-labels = np.zeros(data_size, dtype=int)
-for cluster_id, cluster_indices in enumerate(clusters):
-    for index in cluster_indices:
-        labels[index] = cluster_id
+        clusters = kmedoids_instance.get_clusters()
+        labels = np.zeros(data_size, dtype=int)
+        for cluster_id, cluster_indices in enumerate(clusters):
+            for index in cluster_indices:
+                labels[index] = cluster_id
 
-df['Cluster_KMedoids'] = labels
+        df['Cluster_KMedoids'] = labels
         dbi_kmedoids = davies_bouldin_score(X_scaled, df['Cluster_KMedoids'])
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
