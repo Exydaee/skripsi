@@ -94,16 +94,19 @@ if uploaded_file is not None:
         df['Cluster_KMeans'] = kmeans.labels_
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
-        dist_matrix = calculate_distance_matrix(X_scaled)
-        random.seed(42)
-        initial_medoids = random.sample(range(len(X_scaled)), k)
-        kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
-        kmedoids_instance.process()
-        labels_medoid = np.empty(len(X_scaled), dtype=int)
-        for cluster_id, cluster_indices in enumerate(kmedoids_instance.get_clusters()):
-            for idx in cluster_indices:
-                labels_medoid[idx] = cluster_id
-        df['Cluster_KMedoids'] = labels_medoid
+        data_size = X_scaled.shape[0]
+random.seed(42)
+initial_medoids = random.sample(range(data_size), k)
+kmedoids_instance = kmedoids(data=X_scaled, initial_index_medoids=initial_medoids, method="pam")
+kmedoids_instance.process()
+
+clusters = kmedoids_instance.get_clusters()
+labels = np.zeros(data_size, dtype=int)
+for cluster_id, cluster_indices in enumerate(clusters):
+    for index in cluster_indices:
+        labels[index] = cluster_id
+
+df['Cluster_KMedoids'] = labels
         dbi_kmedoids = davies_bouldin_score(X_scaled, df['Cluster_KMedoids'])
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
