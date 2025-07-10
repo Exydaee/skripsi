@@ -196,8 +196,7 @@ if uploaded_file is not None:
 )
         gabungan_counts = df['Gabungan'].value_counts().sort_index()
 
-        st.subheader("📋 Tabel Data Gabungan untuk Verifikasi")
-        st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Keterampilan_Tertinggi", "Gabungan"]].head(10))
+        
 
         fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
         ax_pie.pie(
