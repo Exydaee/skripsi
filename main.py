@@ -100,6 +100,30 @@ if uploaded_file is not None:
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
+        # Diagram Gabungan Pengetahuan vs Keterampilan
+        df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
+        df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
+        kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
+
+        st.subheader("🥧 Diagram Pie: Dominasi Pengetahuan vs Keterampilan Tertinggi")
+        fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
+        labels = kombinasi_pie.index.map(lambda x: f"{x[0]} - {x[1]}")
+        ax_pie.pie(kombinasi_pie.values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+        ax_pie.axis('equal')
+        st.pyplot(fig_pie)
+
+        # Diagram Gabungan Klaster
+        df['Gabungan'] = df['Cluster_KMeans'].astype(str) + '-' + df['Cluster_KMedoids'].astype(str)
+        gabungan_counts = df['Gabungan'].value_counts().sort_index()
+        fig_gabungan, ax_gabungan = plt.subplots(figsize=(6, 4))
+        gabungan_counts.plot(kind='bar', color='mediumseagreen', ax=ax_gabungan)
+        ax_gabungan.set_title('Diagram Gabungan Klaster K-Means & K-Medoids')
+        ax_gabungan.set_xlabel('Kombinasi KMeans-KMedoids')
+        ax_gabungan.set_ylabel('Jumlah Data')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        st.pyplot(fig_gabungan)
+
         col1, col2 = st.columns(2)
 
         with col1:
