@@ -94,13 +94,11 @@ if uploaded_file is not None:
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
         dist_matrix = calculate_distance_matrix(X_scaled)
-        initial_medoids = list(range(k))  # Ubah agar hasil k-medoids stabil di semua environment
+        initial_medoids = list(range(k))
         kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
         kmedoids_instance.process()
-        labels_medoid = np.zeros(len(X_scaled))
-        for i, cluster in enumerate(kmedoids_instance.get_clusters()):
-            for idx in cluster:
-                labels_medoid[idx] = i
+        final_medoids = kmedoids_instance.get_medoids()
+        labels_medoid = np.argmin([[np.linalg.norm(X_scaled[i] - X_scaled[m]) for m in final_medoids] for i in range(len(X_scaled))], axis=1)
         df['Cluster_KMedoids'] = labels_medoid.astype(int)
         dbi_kmedoids = davies_bouldin_score(X_scaled, df['Cluster_KMedoids'])
 
