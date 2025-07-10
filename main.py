@@ -107,8 +107,17 @@ if uploaded_file is not None:
 
         # === VISUALISASI CLUSTER ===
         # Definisikan warna berbeda untuk K-Means dan K-Medoids
-        color_list_kmeans = ['orange', 'blue', 'green']
-        color_list_kmedoids = ['red', 'purple', 'pink']
+        from matplotlib.cm import get_cmap
+
+        def generate_colors(n, cmap_name='tab10'):
+            cmap = get_cmap(cmap_name)
+            return [cmap(i % cmap.N) for i in range(n)]
+
+        num_clusters_kmeans = len(df['Cluster_KMeans'].unique())
+        num_clusters_kmedoids = len(df['Cluster_KMedoids'].unique())
+
+        color_list_kmeans = generate_colors(num_clusters_kmeans, 'tab10')
+        color_list_kmedoids = generate_colors(num_clusters_kmedoids, 'Set3')
 
         num_clusters_kmeans = len(df['Cluster_KMeans'].unique())
         num_clusters_kmedoids = len(df['Cluster_KMedoids'].unique())
