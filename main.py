@@ -49,22 +49,14 @@ if uploaded_file is not None:
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
     df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
+    st.subheader("🗃️ Data Awal")
+    st.dataframe(df.head())
+
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
     scaler = StandardScaler()
     # === 🔄 TRANSFORMASI ===
     X_scaled = scaler.fit_transform(X)
-
-    df_scaled = pd.DataFrame(X_scaled, columns=fitur)
-    st.subheader("📊 Hasil Transformasi (StandardScaler)")
-    st.dataframe(df_scaled.head())
-    csv_scaled = df_scaled.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Unduh Hasil Transformasi", data=csv_scaled, file_name='data_tertransformasi.csv', mime='text/csv')
-
-    if 'Cluster_KMeans' in df.columns and 'Cluster_KMedoids' in df.columns:
-        st.write("### Data dengan Hasil Klasterisasi", df[[*fitur, 'Cluster_KMeans', 'Cluster_KMedoids']].head())
-    else:
-        st.write("### Data Awal", df.head())
 
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     distortions = []
