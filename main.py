@@ -198,18 +198,18 @@ if uploaded_file is not None:
 
         
 
-        fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
-total = gabungan_counts.sum()
-labels_with_pct = [f"{label} ({value / total:.1%})" for label, value in zip(gabungan_counts.index, gabungan_counts.values)]
-ax_pie.pie(
-    gabungan_counts.values,
-    labels=labels_with_pct,
-    startangle=90,
-    colors=plt.cm.Paired.colors
-)
-ax_pie.axis('equal')
-plt.tight_layout()
-st.pyplot(fig_pie)
+                fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
+        total = gabungan_counts.sum()
+        labels_with_pct = [f"{label} ({value / total:.1%})" for label, value in zip(gabungan_counts.index, gabungan_counts.values)]
+        ax_pie.pie(
+            gabungan_counts.values,
+            labels=labels_with_pct,
+            startangle=90,
+            colors=plt.cm.Paired.colors
+        )
+        ax_pie.axis('equal')
+        plt.tight_layout()
+        st.pyplot(fig_pie)
 
 # Jika belum ada file diunggah
 else:
