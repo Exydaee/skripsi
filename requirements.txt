@@ -1,7 +1,7 @@
-streamlit
-pandas
-matplotlib
-seaborn
-scikit-learn
-scikit-learn-extra
-pyclustering
+streamlit==1.35.0
+pandas==2.2.2
+numpy==1.25.2
+matplotlib==3.8.4
+seaborn==0.13.2
+scikit-learn==1.4.2
+scikit-learn-extra==0.3.0
