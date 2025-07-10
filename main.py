@@ -34,6 +34,7 @@ st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
 
 # === 🧹 PREPROCESSING ===
+# === 🧹 PREPROCESSING ===
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
     for col in df.select_dtypes(include=['object']).columns:
@@ -57,7 +58,7 @@ if uploaded_file is not None:
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
     scaler = StandardScaler()
-    # === 🔄 TRANSFORMASI DATA (StandardScaler) ===
+    # === 🔄 TRANSFORMASI ===
     X_scaled = scaler.fit_transform(X)
 
     # Tampilkan hasil transformasi sebagai DataFrame
@@ -72,7 +73,8 @@ if uploaded_file is not None:
     else:
         st.write("### Data Awal", df.head())
 
-    st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
+    # === 🔍 EVALUASI K: ELBOW METHOD ===
+st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
     K = range(2, 11)
     for k in K:
@@ -89,7 +91,7 @@ if uploaded_file is not None:
 
     k = st.number_input("Masukkan jumlah klaster (k) terbaik berdasarkan grafik elbow:", min_value=2, max_value=10, value=3, step=1)
 
-    # === 📊 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
+    # === 🤖 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
     if st.button("Lakukan Klasterisasi"):
         # K-Means
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
@@ -153,7 +155,8 @@ if uploaded_file is not None:
             st.pyplot(fig4)
             st.download_button("📥 Unduh Grafik 3D K-Medoids", data=fig4.savefig(fname := 'kmedoids_3d.png') or open(fname, 'rb'), file_name='kmedoids_3d.png')
 
-        # Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
+        # === 📊 VISUALISASI LANJUTAN ===
+# Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
         df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
