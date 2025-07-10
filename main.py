@@ -12,6 +12,22 @@ from sklearn.impute import SimpleImputer
 import random
 from mpl_toolkits.mplot3d import Axes3D
 
+# Custom CSS for background and bright theme
+page_bg_img = '''
+<style>
+body {
+background-image: url("https://images.unsplash.com/photo-1508780709619-79562169bc64?auto=format&fit=crop&w=1400&q=80");
+background-size: cover;
+}
+.stApp {
+background-color: rgba(255, 255, 255, 0.9);
+border-radius: 10px;
+padding: 2rem;
+}
+</style>
+'''
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
 st.set_page_config(page_title="Student Clustering", layout="wide")
 st.title("📊 Student Performance Clustering")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan K-Means atau K-Medoids")
