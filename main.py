@@ -94,7 +94,7 @@ if uploaded_file is not None:
         df['Cluster_KMeans'] = kmeans.labels_
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
-                data_size = X_scaled.shape[0]
+        data_size = X_scaled.shape[0]
         random.seed(42)
         initial_medoids = random.sample(range(data_size), k)
         kmedoids_instance = kmedoids(data=X_scaled, initial_index_medoids=initial_medoids, method="pam")
