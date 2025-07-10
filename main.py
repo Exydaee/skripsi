@@ -33,6 +33,7 @@ st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** 
 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
 
+# === 🧹 PREPROCESSING ===
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
     for col in df.select_dtypes(include=['object']).columns:
@@ -42,35 +43,34 @@ if uploaded_file is not None:
         except:
             pass
 
-    if 'Cluster_KMeans' in df.columns and 'Cluster_KMedoids' in df.columns:
-        st.write("### Data dengan Hasil Klasterisasi", df[[*fitur, 'Cluster_KMeans', 'Cluster_KMedoids']].head())
-    else:
-        st.write("### Data Awal", df.head())
-
-    # Preprocessing
-for col in df.select_dtypes(include=['object']).columns:
-    df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
-    try:
-        df[col] = df[col].astype(float)
-    except:
-        pass
-
     imputer = SimpleImputer(strategy='mean')
     df[df.columns] = imputer.fit_transform(df)
 
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
-
     df["Keterampilan_Tertinggi"] = df.apply(
-        lambda row: max([row["PNJ"], row["SBDY"], row["PRK"]]) if pd.notna(row["PNJ"]) and pd.notna(row["SBDY"]) and pd.notna(row["PRK"]) else np.nan,
+        lambda row: max([row["PNJ"], row["SBDY"], row["PRK"]])
+        if pd.notna(row["PNJ"]) and pd.notna(row["SBDY"]) and pd.notna(row["PRK"]) else np.nan,
         axis=1)
-
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
     scaler = StandardScaler()
+    # === 🔄 TRANSFORMASI DATA (StandardScaler) ===
     X_scaled = scaler.fit_transform(X)
+
+    # Tampilkan hasil transformasi sebagai DataFrame
+    df_scaled = pd.DataFrame(X_scaled, columns=fitur)
+    st.subheader("📊 Hasil Transformasi (StandardScaler)")
+    st.dataframe(df_scaled.head())
+    csv_scaled = df_scaled.to_csv(index=False).encode('utf-8')
+    st.download_button("📥 Unduh Hasil Transformasi", data=csv_scaled, file_name='data_tertransformasi.csv', mime='text/csv')
+
+    if 'Cluster_KMeans' in df.columns and 'Cluster_KMedoids' in df.columns:
+        st.write("### Data dengan Hasil Klasterisasi", df[[*fitur, 'Cluster_KMeans', 'Cluster_KMedoids']].head())
+    else:
+        st.write("### Data Awal", df.head())
 
     st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
@@ -89,6 +89,7 @@ for col in df.select_dtypes(include=['object']).columns:
 
     k = st.number_input("Masukkan jumlah klaster (k) terbaik berdasarkan grafik elbow:", min_value=2, max_value=10, value=3, step=1)
 
+    # === 📊 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
     if st.button("Lakukan Klasterisasi"):
         # K-Means
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
@@ -97,6 +98,7 @@ for col in df.select_dtypes(include=['object']).columns:
 
         # K-Medoids
         dist_matrix = calculate_distance_matrix(X_scaled)
+        random.seed(42)
         initial_medoids = random.sample(range(len(X_scaled)), k)
         kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
         kmedoids_instance.process()
@@ -109,9 +111,6 @@ for col in df.select_dtypes(include=['object']).columns:
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
-        
-
-        
         col1, col2 = st.columns(2)
 
         with col1:
@@ -122,6 +121,7 @@ for col in df.select_dtypes(include=['object']).columns:
             ax1.axis('equal')
             st.pyplot(fig1)
             st.download_button("📥 Unduh Grafik Pie K-Means", data=fig1.savefig(fname := 'kmeans_pie.png') or open(fname, 'rb'), file_name='kmeans_pie.png')
+
             fig2 = plt.figure(figsize=(10, 8))
             ax2 = fig2.add_subplot(111, projection='3d')
             scatter_kmeans = ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
@@ -141,6 +141,7 @@ for col in df.select_dtypes(include=['object']).columns:
             ax3.axis('equal')
             st.pyplot(fig3)
             st.download_button("📥 Unduh Grafik Pie K-Medoids", data=fig3.savefig(fname := 'kmedoids_pie.png') or open(fname, 'rb'), file_name='kmedoids_pie.png')
+
             fig4 = plt.figure(figsize=(10, 8))
             ax4 = fig4.add_subplot(111, projection='3d')
             scatter_kmedoids = ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
@@ -165,5 +166,6 @@ for col in df.select_dtypes(include=['object']).columns:
         ax_pie.axis('equal')
         st.pyplot(fig_pie)
         st.download_button("📥 Unduh Grafik Pie Pengetahuan vs Keterampilan", data=fig_pie.savefig(fname := 'gabungan_pie.png') or open(fname, 'rb'), file_name='gabungan_pie.png')
+
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
