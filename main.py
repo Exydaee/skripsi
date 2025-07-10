@@ -156,7 +156,5 @@ if uploaded_file is not None:
         ax_pie.axis('equal')
         st.pyplot(fig_pie)
         st.download_button("📥 Unduh Grafik Pie Pengetahuan vs Keterampilan", data=fig_pie.savefig(fname := 'gabungan_pie.png') or open(fname, 'rb'), file_name='gabungan_pie.png')
-
-         or open(fname, 'rb'), file_name='gabungan_pie.png')
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
