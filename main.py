@@ -67,7 +67,7 @@ if uploaded_file is not None:
 
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     distortions = []
-    K_range = range(1, 11)
+    K_range = range(2, 11)
     for k_val in K_range:
         km = KMeans(n_clusters=k_val, random_state=42).fit(X_scaled)
         distortions.append(km.inertia_)
@@ -106,23 +106,56 @@ if uploaded_file is not None:
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
         # === VISUALISASI CLUSTER ===
-        st.subheader("📌 Visualisasi 3D Klasterisasi")
-        fig1 = plt.figure(figsize=(10, 6))
-        ax1 = fig1.add_subplot(121, projection='3d')
-        ax1.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMeans'], cmap='viridis')
-        ax1.set_title("K-Means")
+        # Definisikan warna berbeda untuk K-Means dan K-Medoids
+        color_list_kmeans = ['orange', 'blue', 'green']
+        color_list_kmedoids = ['red', 'purple', 'pink']
+
+        num_clusters_kmeans = len(df['Cluster_KMeans'].unique())
+        num_clusters_kmedoids = len(df['Cluster_KMedoids'].unique())
+
+        cluster_colors_kmeans = {i: color_list_kmeans[i] for i in range(num_clusters_kmeans)}
+        cluster_colors_kmedoids = {i: color_list_kmedoids[i] for i in range(num_clusters_kmedoids)}
+
+        df['Warna_KMeans'] = df['Cluster_KMeans'].map(cluster_colors_kmeans)
+        df['Warna_KMedoids'] = df['Cluster_KMedoids'].map(cluster_colors_kmedoids)
+
+        legend_elements_kmeans = [
+            plt.Line2D([0], [0], marker='o', color='w', label=f'Klaster {i}',
+                       markerfacecolor=color, markersize=10)
+            for i, color in cluster_colors_kmeans.items()
+        ]
+
+        legend_elements_kmedoids = [
+            plt.Line2D([0], [0], marker='o', color='w', label=f'Klaster {i}',
+                       markerfacecolor=color, markersize=10)
+            for i, color in cluster_colors_kmedoids.items()
+        ]
+
+        fig = plt.figure(figsize=(14, 6))
+        ax1 = fig.add_subplot(121, projection='3d')
+        ax1.scatter(
+            df["Pengetahuan_Sains"], df["Pengetahuan_Sosial"], df["Nilai_Keterampilan_Tertinggi"],
+            c=df["Warna_KMeans"], s=60
+        )
+        ax1.set_title("3D Scatter Plot K-Means")
         ax1.set_xlabel("Pengetahuan Sains")
         ax1.set_ylabel("Pengetahuan Sosial")
-        ax1.set_zlabel("Keterampilan Tertinggi")
+        ax1.set_zlabel("Nilai Keterampilan Tertinggi")
+        ax1.legend(handles=legend_elements_kmeans, title='Klaster')
 
-        ax2 = fig1.add_subplot(122, projection='3d')
-        ax2.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMedoids'], cmap='plasma')
-        ax2.set_title("K-Medoids")
+        ax2 = fig.add_subplot(122, projection='3d')
+        ax2.scatter(
+            df["Pengetahuan_Sains"], df["Pengetahuan_Sosial"], df["Nilai_Keterampilan_Tertinggi"],
+            c=df["Warna_KMedoids"], s=60
+        )
+        ax2.set_title("3D Scatter Plot K-Medoids")
         ax2.set_xlabel("Pengetahuan Sains")
         ax2.set_ylabel("Pengetahuan Sosial")
-        ax2.set_zlabel("Keterampilan Tertinggi")
+        ax2.set_zlabel("Nilai Keterampilan Tertinggi")
+        ax2.legend(handles=legend_elements_kmedoids, title='Klaster')
 
-        st.pyplot(fig1)
+        plt.tight_layout()
+        st.pyplot(fig)
 
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
