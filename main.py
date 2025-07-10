@@ -159,15 +159,22 @@ if uploaded_file is not None:
 
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
-        df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
-        df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
-        kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
+        df['Gabungan'] = df.apply(
+            lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {row[['PNJ','SBDY','PRK']].idxmax()}", axis=1
+        )
+        gabungan_counts = df['Gabungan'].value_counts()
 
-        fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
-        label_map = {"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"}
-        labels = kombinasi_pie.index.map(lambda x: f"{x[0]} - {label_map.get(x[1], x[1])}")
-        ax_pie.pie(kombinasi_pie.values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+        fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
+        ax_pie.pie(
+            gabungan_counts.values,
+            labels=gabungan_counts.index,
+            autopct='%1.1f%%',
+            startangle=90,
+            colors=plt.cm.Paired.colors
+        )
         ax_pie.axis('equal')
+        plt.title('Distribusi Gabungan Pengetahuan dan Keterampilan Tertinggi Siswa', pad=30)
+        plt.tight_layout()
         st.pyplot(fig_pie)
 
 else:
