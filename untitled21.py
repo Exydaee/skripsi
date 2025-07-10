@@ -1,3 +1,5 @@
+# Streamlit Web App Lengkap: Klasterisasi Siswa dengan K-Means & K-Medoids
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,43 +7,37 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn_extra.cluster import KMedoids
-from sklearn.impute import SimpleImputer
 from sklearn.metrics import davies_bouldin_score
+from sklearn.impute import SimpleImputer
+from sklearn_extra.cluster import KMedoids
 from mpl_toolkits.mplot3d import Axes3D
-import base64
+import matplotlib.colors as mcolors
 
-# ======== FUNGSI TAMBAHAN UNTUK BACKGROUND =========
-def set_background(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    css = f"""
+# ====== SETUP UI ======
+st.set_page_config(page_title="Klasterisasi Siswa SMP", layout="wide", page_icon="📊")
+
+# Tambahan custom CSS untuk mempercantik background
+st.markdown("""
     <style>
-    .stApp {{
-        background-image: url("data:image/png;base64,{encoded_string}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    .block-container {{
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 2rem;
-        border-radius: 12px;
-    }}
+        .stApp {
+            background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+            color: white;
+        }
+        .css-1d391kg {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .css-1v0mbdj p {
+            color: white;
+        }
     </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# ======== ATUR PAGE =========
-st.set_page_config(page_title="Klasterisasi Siswa SMP", layout="wide")
-set_background("background.png")  # ganti dengan nama file gambar background kamu
-st.markdown("<h1 style='text-align: center; color: navy;'>📊 Klasterisasi Siswa SMP Berdasarkan Nilai Rapor</h1>", unsafe_allow_html=True)
+st.title("📊 Klasterisasi Siswa SMP Berdasarkan Nilai Rapor")
 
-# ======== UPLOAD =========
+# Upload CSV
 uploaded_file = st.file_uploader("📁 Upload file CSV nilai siswa", type=["csv"])
 
-if uploaded_file:
+if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
 
     for col in df.select_dtypes(include='object').columns:
@@ -59,9 +55,10 @@ if uploaded_file:
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Keterampilan_Tertinggi"]
     X = df[fitur]
-    X_scaled = StandardScaler().fit_transform(X)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    st.subheader("🔢 Pilih Jumlah Klaster")
+    st.subheader("🎯 Pilih Jumlah Klaster")
     k = st.slider("Jumlah Klaster", 2, 10, 3)
 
     kmeans = KMeans(n_clusters=k, random_state=42)
@@ -74,86 +71,89 @@ if uploaded_file:
     dbi_kmedoids = davies_bouldin_score(X_scaled, df["Klaster_KMedoids"])
 
     def klasifikasi_predikat(sains, sosial, keterampilan):
-        r = (sains + sosial + keterampilan) / 3
-        if r >= 90: return "Sangat Baik"
-        elif r >= 80: return "Baik"
-        elif r >= 70: return "Cukup"
-        else: return "Perlu Bimbingan"
+        rata2 = (sains + sosial + keterampilan) / 3
+        if rata2 >= 90:
+            return "Sangat Baik"
+        elif rata2 >= 80:
+            return "Baik"
+        elif rata2 >= 70:
+            return "Cukup"
+        else:
+            return "Perlu Bimbingan"
 
     df["Predikat"] = df.apply(lambda row: klasifikasi_predikat(
         row["Pengetahuan_Sains"], row["Pengetahuan_Sosial"], row["Keterampilan_Tertinggi"]), axis=1)
 
     df["Gabungan"] = df.apply(
-        lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {['PRK','SBDY','PNJ'][np.argmax([row['PRK'], row['SBDY'], row['PNJ']])]}"
-        if not pd.isna(row['PRK']) and not pd.isna(row['SBDY']) and not pd.isna(row['PNJ']) else "-", axis=1)
+        lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {['PRK', 'SBDY', 'PNJ'][np.argmax([row['PRK'], row['SBDY'], row['PNJ']])]}" if not pd.isna(row['PRK']) and not pd.isna(row['SBDY']) and not pd.isna(row['PNJ']) else "-",
+        axis=1
+    )
 
-    # ======= TABEL & EVALUASI ========
-    st.subheader("📋 Tabel dan Evaluasi")
+    st.subheader("📈 Tabel dan Evaluasi")
     st.write(f"**Davies-Bouldin Index K-Means:** `{dbi_kmeans:.4f}`")
     st.write(f"**Davies-Bouldin Index K-Medoids:** `{dbi_kmedoids:.4f}`")
     st.dataframe(df[fitur + ["Klaster_KMeans", "Klaster_KMedoids", "Predikat", "Gabungan"]])
 
-    # ======= VISUALISASI 2D ========
-    st.subheader("📈 Visualisasi 2D")
+    # Warna untuk konsistensi visualisasi
+    k_palette = sns.color_palette("cubehelix", k)
+    m_palette = sns.color_palette("coolwarm", k)
+
+    st.subheader("📊 Visualisasi 2D")
     col1, col2 = st.columns(2)
     with col1:
-        fig, ax = plt.subplots()
-        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMeans"], palette="tab10", ax=ax)
-        ax.set_title("K-Means")
-        st.pyplot(fig)
+        fig1, ax1 = plt.subplots()
+        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMeans"], palette=k_palette, ax=ax1)
+        ax1.set_title("K-Means Clustering", color="white")
+        ax1.set_facecolor("#1e1e1e")
+        fig1.patch.set_facecolor("#1e1e1e")
+        st.pyplot(fig1)
 
     with col2:
-        fig, ax = plt.subplots()
-        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMedoids"], palette="Set2", ax=ax)
-        ax.set_title("K-Medoids")
-        st.pyplot(fig)
+        fig2, ax2 = plt.subplots()
+        sns.scatterplot(x=X["Pengetahuan_Sains"], y=X["Keterampilan_Tertinggi"], hue=df["Klaster_KMedoids"], palette=m_palette, ax=ax2)
+        ax2.set_title("K-Medoids Clustering", color="white")
+        ax2.set_facecolor("#1e1e1e")
+        fig2.patch.set_facecolor("#1e1e1e")
+        st.pyplot(fig2)
 
-    # ======= VISUALISASI 3D ========
-    st.subheader("🧊 Visualisasi 3D")
+    st.subheader("🧠 Visualisasi 3D")
     fig = plt.figure(figsize=(12, 5))
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax1.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMeans"], cmap="tab10")
-    ax1.set_title("K-Means 3D")
-    ax1.set_xlabel("Sains")
-    ax1.set_ylabel("Sosial")
-    ax1.set_zlabel("Keterampilan")
+    ax = fig.add_subplot(121, projection='3d')
+    ax.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMeans"], cmap="plasma")
+    ax.set_title("K-Means 3D")
+    ax.set_xlabel("Sains")
+    ax.set_ylabel("Sosial")
+    ax.set_zlabel("Keterampilan")
 
     ax2 = fig.add_subplot(122, projection='3d')
-    ax2.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMedoids"], cmap="Set2")
+    ax2.scatter(X["Pengetahuan_Sains"], X["Pengetahuan_Sosial"], X["Keterampilan_Tertinggi"], c=df["Klaster_KMedoids"], cmap="coolwarm")
     ax2.set_title("K-Medoids 3D")
     ax2.set_xlabel("Sains")
     ax2.set_ylabel("Sosial")
     ax2.set_zlabel("Keterampilan")
     st.pyplot(fig)
 
-    # ======= PIE CHARTS ========
-    st.subheader("📊 Pie Chart Distribusi")
-    pie_cols = st.columns(3)
-    with pie_cols[0]:
-        fig, ax = plt.subplots()
-        df["Klaster_KMeans"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax)
-        ax.set_ylabel("")
-        ax.set_title("Distribusi KMeans")
-        st.pyplot(fig)
+    st.subheader("🍕 Pie Chart Distribusi")
+    fig3, ax3 = plt.subplots()
+    df["Klaster_KMeans"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax3, colors=k_palette)
+    ax3.set_ylabel("")
+    ax3.set_title("Distribusi KMeans")
+    st.pyplot(fig3)
 
-    with pie_cols[1]:
-        fig, ax = plt.subplots()
-        df["Klaster_KMedoids"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax)
-        ax.set_ylabel("")
-        ax.set_title("Distribusi KMedoids")
-        st.pyplot(fig)
+    fig4, ax4 = plt.subplots()
+    df["Klaster_KMedoids"].value_counts().sort_index().plot.pie(autopct="%1.1f%%", ax=ax4, colors=m_palette)
+    ax4.set_ylabel("")
+    ax4.set_title("Distribusi KMedoids")
+    st.pyplot(fig4)
 
-    with pie_cols[2]:
-        fig, ax = plt.subplots()
-        df["Gabungan"].value_counts().plot.pie(autopct="%1.1f%%", ax=ax, colors=plt.cm.Paired.colors)
-        ax.set_ylabel("")
-        ax.set_title("Gabungan Pengetahuan & Keterampilan")
-        st.pyplot(fig)
+    fig5, ax5 = plt.subplots()
+    df["Gabungan"].value_counts().plot.pie(autopct='%1.1f%%', ax=ax5, colors=sns.color_palette("pastel"))
+    ax5.set_ylabel("")
+    ax5.set_title("Gabungan Pengetahuan & Keterampilan")
+    st.pyplot(fig5)
 
-    # ======= UNDUH HASIL ========
     st.subheader("⬇️ Unduh Hasil")
     csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("Download CSV", csv, "hasil_klasterisasi.csv", "text/csv")
-
+    st.download_button("📥 Download CSV", csv, "hasil_klasterisasi.csv", "text/csv")
 else:
     st.info("Silakan upload file CSV terlebih dahulu.")
