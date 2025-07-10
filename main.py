@@ -157,19 +157,6 @@ if uploaded_file is not None:
         st.pyplot(fig_pie)
         st.download_button("📥 Unduh Grafik Pie Pengetahuan vs Keterampilan", data=fig_pie.savefig(fname := 'gabungan_pie.png') or open(fname, 'rb'), file_name='gabungan_pie.png')
 
-        # ZIP semua grafik
-        import zipfile, io
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
-            for name in ["elbow_plot.png", "kmeans_pie.png", "kmeans_3d.png", "kmedoids_pie.png", "kmedoids_3d.png", "gabungan_pie.png"]:
-                with open(name, "rb") as f:
-                    zip_file.writestr(name, f.read())
-        zip_buffer.seek(0)
-        st.download_button(
-            label="📦 Unduh Semua Grafik (.zip)",
-            data=zip_buffer,
-            file_name="semua_grafik_visualisasi.zip",
-            mime="application/zip"
-        ) or open(fname, 'rb'), file_name='gabungan_pie.png')
+         or open(fname, 'rb'), file_name='gabungan_pie.png')
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
