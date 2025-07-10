@@ -8,7 +8,6 @@ from sklearn.cluster import KMeans
 from pyclustering.cluster.kmedoids import kmedoids
 from pyclustering.utils import calculate_distance_matrix
 from sklearn.impute import SimpleImputer
-import random
 from mpl_toolkits.mplot3d import Axes3D
 
 # Custom CSS for background and bright theme
@@ -32,7 +31,6 @@ st.title("📊 Student Performance Clustering")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** dan **K-Medoids** secara bersamaan.")
 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
-
 
 # === 🧹 PREPROCESSING ===
 if uploaded_file is not None:
@@ -69,10 +67,11 @@ if uploaded_file is not None:
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
-    K = range(2, 11)
+    K = range(1, 11)
     for k in K:
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         distortions.append(kmeans.inertia_)
+        st.write(f"k = {k}, inertia = {kmeans.inertia_:.2f}")  # Untuk debugging dan validasi
 
     fig_elbow, ax_elbow = plt.subplots(figsize=(6, 4))
     ax_elbow.plot(K, distortions, 'bx-')
@@ -95,8 +94,7 @@ if uploaded_file is not None:
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
         dist_matrix = calculate_distance_matrix(X_scaled)
-        random.seed(42)
-        initial_medoids = random.sample(range(len(X_scaled)), k)
+        initial_medoids = list(range(k))  # Ubah agar hasil k-medoids stabil di semua environment
         kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
         kmedoids_instance.process()
         labels_medoid = np.zeros(len(X_scaled))
