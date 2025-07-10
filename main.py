@@ -108,11 +108,11 @@ if uploaded_file is not None:
             st.pyplot(fig1)
             fig2 = plt.figure(figsize=(8, 6))
             ax2 = fig2.add_subplot(111, projection='3d')
-            ax2.view_init(elev=20., azim=135)
-            ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
+            scatter_kmeans = ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
             ax2.set_xlabel(fitur[0])
             ax2.set_ylabel(fitur[1])
             ax2.set_zlabel(fitur[2])
+            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster")
             st.pyplot(fig2)
 
         with col2:
@@ -124,11 +124,11 @@ if uploaded_file is not None:
             st.pyplot(fig3)
             fig4 = plt.figure(figsize=(8, 6))
             ax4 = fig4.add_subplot(111, projection='3d')
-            ax4.view_init(elev=20., azim=135)
-            ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
+            scatter_kmedoids = ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
             ax4.set_xlabel(fitur[0])
             ax4.set_ylabel(fitur[1])
             ax4.set_zlabel(fitur[2])
+            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster")
             st.pyplot(fig4)
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
