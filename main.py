@@ -188,23 +188,20 @@ if uploaded_file is not None:
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
         df['Gabungan'] = df.apply(
-            lambda row: f"{'Sains' if round(row['Pengetahuan_Sains'], 2) > round(row['Pengetahuan_Sosial'], 2) else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
+            lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
         )
         gabungan_counts = df['Gabungan'].value_counts().sort_index()
 
         fig_pie, ax_pie = plt.subplots(figsize=(8, 8))
-        total = gabungan_counts.sum()
-        labels_with_pct = [f"{label} ({value / total:.1%})" for label, value in zip(gabungan_counts.index, gabungan_counts.values)]
         ax_pie.pie(
             gabungan_counts.values,
-            labels=labels_with_pct,
+            labels=gabungan_counts.index,
+            autopct='%1.1f%%',
             startangle=90,
             colors=plt.cm.Paired.colors
         )
         ax_pie.axis('equal')
         plt.tight_layout()
         st.pyplot(fig_pie)
-
-# Jika belum ada file diunggah
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
