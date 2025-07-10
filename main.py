@@ -66,27 +66,21 @@ if uploaded_file is not None:
         st.write("### Data Awal", df.head())
 
     # === 🔍 EVALUASI K: ELBOW METHOD ===
-    st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
-    K = range(2, 11)
-    # for k in K:
-    #     kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
-    #     distortions.append(kmeans.inertia_)
-    #     st.text(f"k = {k}, inertia = {kmeans.inertia_:.2f}")
+    K_range = range(2, 11)
+    for k_val in K_range:
+        km = KMeans(n_clusters=k_val, random_state=42).fit(X_scaled)
+        distortions.append(km.inertia_)
 
-    fig_elbow, ax_elbow = plt.subplots(figsize=(6, 4))
-    ax_elbow.plot(K, distortions, 'bx-')
-    ax_elbow.set_xlabel('Jumlah Klaster k')
-    ax_elbow.set_ylabel('Inertia')
-    ax_elbow.set_title('Metode Elbow untuk Menentukan k')
+    st.subheader("📈 Grafik Elbow untuk Menentukan k Optimal")
+    fig_elbow, ax_elbow = plt.subplots()
+    ax_elbow.plot(K_range, distortions, 'bo-')
+    ax_elbow.set_xlabel("Jumlah Klaster (k)")
+    ax_elbow.set_ylabel("Inertia")
+    ax_elbow.set_title("Elbow Method")
     st.pyplot(fig_elbow)
 
-    with open("elbow_plot.png", "wb") as f:
-        fig_elbow.savefig(f)
-    with open("elbow_plot.png", "rb") as f:
-        st.download_button("📥 Unduh Grafik Elbow", data=f, file_name="elbow_plot.png")
-
-    k = st.number_input("Masukkan jumlah klaster (k) terbaik berdasarkan grafik elbow:", min_value=2, max_value=10, value=3, step=1)
+    k = st.slider("Pilih jumlah klaster (k):", min_value=2, max_value=10, value=3)
 
     # === 🤖 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
     if st.button("Lakukan Klasterisasi"):
