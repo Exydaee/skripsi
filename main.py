@@ -28,7 +28,7 @@ padding: 2rem;
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.set_page_config(page_title="Student Clustering", layout="wide")
-st.title("📊 Student Performance Clustering")
+st.title("📊 Analisis Perbandingan K-Means dan K-Medoids pada Nilai Rapor Siswa")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** dan **K-Medoids** secara bersamaan.")
 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
