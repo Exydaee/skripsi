@@ -47,7 +47,7 @@ if uploaded_file is not None:
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
-    df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1)
+    df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
@@ -166,6 +166,28 @@ if uploaded_file is not None:
 
         plt.tight_layout()
         st.pyplot(fig)
+
+        # === PIE CHART DISTRIBUSI K-MEANS ===
+        st.subheader("📊 Distribusi Klaster K-Means")
+        fig_pie_kmeans, ax_kmeans = plt.subplots()
+        df['Cluster_KMeans'].value_counts().sort_index().plot.pie(
+            autopct='%1.1f%%', ax=ax_kmeans,
+            colors=[cluster_colors_kmeans[i] for i in sorted(cluster_colors_kmeans)]
+        )
+        ax_kmeans.set_ylabel('')
+        ax_kmeans.set_title("Distribusi Klaster - KMeans")
+        st.pyplot(fig_pie_kmeans)
+
+        # === PIE CHART DISTRIBUSI K-MEDOIDS ===
+        st.subheader("📊 Distribusi Klaster K-Medoids")
+        fig_pie_kmedoids, ax_kmedoids = plt.subplots()
+        df['Cluster_KMedoids'].value_counts().sort_index().plot.pie(
+            autopct='%1.1f%%', ax=ax_kmedoids,
+            colors=[cluster_colors_kmedoids[i] for i in sorted(cluster_colors_kmedoids)]
+        )
+        ax_kmedoids.set_ylabel('')
+        ax_kmedoids.set_title("Distribusi Klaster - KMedoids")
+        st.pyplot(fig_pie_kmedoids)
 
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
