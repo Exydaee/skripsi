@@ -146,12 +146,13 @@ if uploaded_file is not None:
 
         # Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
-        df['Asal_Keterampilan_Tertinggi'] = df[['Pendidikan Jasmani dan Olahraga', 'Seni Budaya', 'Prakarya']].idxmax(axis=1)
+        df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
 
         st.subheader("🥧 Diagram Pie: Dominasi Pengetahuan vs Keterampilan Tertinggi")
         fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
-        labels = kombinasi_pie.index.map(lambda x: f"{x[0]} - {x[1]}")
+        label_map = {"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"}
+        labels = kombinasi_pie.index.map(lambda x: f"{x[0]} - {label_map.get(x[1], x[1])}")
         ax_pie.pie(kombinasi_pie.values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
         ax_pie.axis('equal')
         st.pyplot(fig_pie)
