@@ -9,6 +9,7 @@ from pyclustering.cluster.kmedoids import kmedoids
 from pyclustering.utils import calculate_distance_matrix
 from sklearn.impute import SimpleImputer
 from mpl_toolkits.mplot3d import Axes3D
+import random
 
 # Custom CSS for background and bright theme
 page_bg_img = '''
@@ -67,7 +68,7 @@ if uploaded_file is not None:
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
-    K = range(2, 11)  # Mulai dari 2 karena DBI dan Elbow tidak valid untuk k=1
+    K = range(2, 11)
     for k in K:
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         distortions.append(kmeans.inertia_)
@@ -94,7 +95,8 @@ if uploaded_file is not None:
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
         dist_matrix = calculate_distance_matrix(X_scaled)
-        initial_medoids = list(range(k))
+        random.seed(42)
+        initial_medoids = random.sample(range(len(X_scaled)), k)
         kmedoids_instance = kmedoids(dist_matrix, initial_medoids, data_type='distance_matrix')
         kmedoids_instance.process()
         labels_medoid = np.empty(len(X_scaled), dtype=int)
@@ -106,50 +108,31 @@ if uploaded_file is not None:
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
-        col1, col2 = st.columns(2)
+        # === VISUALISASI CLUSTER ===
+        st.subheader("📌 Visualisasi 3D Klasterisasi")
+        fig1 = plt.figure(figsize=(10, 6))
+        ax1 = fig1.add_subplot(121, projection='3d')
+        ax1.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMeans'], cmap='viridis')
+        ax1.set_title("K-Means")
+        ax1.set_xlabel("Pengetahuan Sains")
+        ax1.set_ylabel("Pengetahuan Sosial")
+        ax1.set_zlabel("Keterampilan Tertinggi")
 
-        with col1:
-            st.subheader("🔹 K-Means Clustering")
-            st.dataframe(df[[*fitur, 'Cluster_KMeans']].head())
-            fig1, ax1 = plt.subplots()
-            df['Cluster_KMeans'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax1)
-            ax1.axis('equal')
-            st.pyplot(fig1)
+        ax2 = fig1.add_subplot(122, projection='3d')
+        ax2.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMedoids'], cmap='plasma')
+        ax2.set_title("K-Medoids")
+        ax2.set_xlabel("Pengetahuan Sains")
+        ax2.set_ylabel("Pengetahuan Sosial")
+        ax2.set_zlabel("Keterampilan Tertinggi")
 
-            fig2 = plt.figure(figsize=(10, 8))
-            ax2 = fig2.add_subplot(111, projection='3d')
-            scatter_kmeans = ax2.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMeans'], cmap='viridis')
-            ax2.set_xlabel('Pengetahuan_Sains', labelpad=15)
-            ax2.set_ylabel('Pengetahuan_Sosial', labelpad=15)
-            ax2.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
-            plt.tight_layout()
-            st.pyplot(fig2)
+        st.pyplot(fig1)
 
-        with col2:
-            st.subheader("🔸 K-Medoids Clustering")
-            st.dataframe(df[[*fitur, 'Cluster_KMedoids']].head())
-            fig3, ax3 = plt.subplots()
-            df['Cluster_KMedoids'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax3)
-            ax3.axis('equal')
-            st.pyplot(fig3)
- 
-            fig4 = plt.figure(figsize=(10, 8))
-            ax4 = fig4.add_subplot(111, projection='3d')
-            scatter_kmedoids = ax4.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMedoids'], cmap='plasma')
-            ax4.set_xlabel('Pengetahuan_Sains', labelpad=15)
-            ax4.set_ylabel('Pengetahuan_Sosial', labelpad=15)
-            ax4.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
-            plt.tight_layout()
-            st.pyplot(fig4)
-
-        # === 📊 VISUALISASI LANJUTAN ===
+        # === DIAGRAM PIE GABUNGAN ===
+        st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
         df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
 
-        st.subheader("🥧 Diagram Pie: Dominasi Pengetahuan vs Keterampilan Tertinggi")
         fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
         label_map = {"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"}
         labels = kombinasi_pie.index.map(lambda x: f"{x[0]} - {label_map.get(x[1], x[1])}")
