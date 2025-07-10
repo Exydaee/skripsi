@@ -67,7 +67,7 @@ if uploaded_file is not None:
 
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     distortions = []
-    K_range = range(2, 11)
+    K_range = range(1, 11)
     for k_val in K_range:
         km = KMeans(n_clusters=k_val, random_state=42).fit(X_scaled)
         distortions.append(km.inertia_)
