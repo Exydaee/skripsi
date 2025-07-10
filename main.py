@@ -107,7 +107,6 @@ if uploaded_file is not None:
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
         # === VISUALISASI CLUSTER ===
-        # Definisikan warna berbeda untuk K-Means dan K-Medoids
         from matplotlib.cm import get_cmap
 
         def generate_colors(n, cmap_name='tab10'):
@@ -119,9 +118,6 @@ if uploaded_file is not None:
 
         color_list_kmeans = generate_colors(num_clusters_kmeans, 'tab10')
         color_list_kmedoids = generate_colors(num_clusters_kmedoids, 'Set3')
-
-        num_clusters_kmeans = len(df['Cluster_KMeans'].unique())
-        num_clusters_kmedoids = len(df['Cluster_KMedoids'].unique())
 
         cluster_colors_kmeans = {i: color_list_kmeans[i] for i in range(num_clusters_kmeans)}
         cluster_colors_kmedoids = {i: color_list_kmedoids[i] for i in range(num_clusters_kmedoids)}
@@ -191,7 +187,7 @@ if uploaded_file is not None:
 
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
-                df['Gabungan'] = df.apply(
+        df['Gabungan'] = df.apply(
             lambda row: f"{'Sains' if round(row['Pengetahuan_Sains'], 2) > round(row['Pengetahuan_Sosial'], 2) else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
         )
         gabungan_counts = df['Gabungan'].value_counts().sort_index()
@@ -212,5 +208,3 @@ if uploaded_file is not None:
 # Jika belum ada file diunggah
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
-
-
