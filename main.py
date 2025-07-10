@@ -133,7 +133,7 @@ if uploaded_file is not None:
             df['Cluster_KMedoids'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax3)
             ax3.axis('equal')
             st.pyplot(fig3)
-
+ 
             fig4 = plt.figure(figsize=(10, 8))
             ax4 = fig4.add_subplot(111, projection='3d')
             scatter_kmedoids = ax4.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMedoids'], cmap='plasma')
