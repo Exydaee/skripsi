@@ -28,7 +28,7 @@ padding: 2rem;
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.set_page_config(page_title="Student Clustering", layout="wide")
-st.title("📊 Analisis Perbandingan K-Means dan K-Medoids pada Nilai Rapor Siswa")
+st.title("📊 Student Performance Clustering")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** dan **K-Medoids** secara bersamaan.")
 
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
@@ -146,7 +146,7 @@ if uploaded_file is not None:
 
         # Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
-        df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
+        df['Asal_Keterampilan_Tertinggi'] = df[['Pendidikan Jasmani dan Olahraga', 'Seni Budaya', 'Prakarya']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
 
         st.subheader("🥧 Diagram Pie: Dominasi Pengetahuan vs Keterampilan Tertinggi")
