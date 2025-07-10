@@ -68,7 +68,7 @@ if uploaded_file is not None:
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         distortions.append(kmeans.inertia_)
 
-    fig_elbow, ax_elbow = plt.subplots()
+    fig_elbow, ax_elbow = plt.subplots(figsize=(6, 4))
     ax_elbow.plot(K, distortions, 'bx-')
     ax_elbow.set_xlabel('Jumlah Klaster k')
     ax_elbow.set_ylabel('Inertia')
