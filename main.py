@@ -192,8 +192,8 @@ if uploaded_file is not None:
         # === DIAGRAM PIE GABUNGAN ===
         st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
         df['Gabungan'] = df.apply(
-            lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
-        )
+    lambda row: f"{'Sains' if round(row['Pengetahuan_Sains'], 2) > round(row['Pengetahuan_Sosial'], 2) else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
+)
         gabungan_counts = df['Gabungan'].value_counts()
 
         st.subheader("📋 Tabel Data Gabungan untuk Verifikasi")
