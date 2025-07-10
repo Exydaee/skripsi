@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 from pyclustering.cluster.kmedoids import kmedoids
 from pyclustering.utils import calculate_distance_matrix
 from sklearn.impute import SimpleImputer
-import random 
+import random
 from mpl_toolkits.mplot3d import Axes3D
 
 # Custom CSS for background and bright theme
@@ -37,22 +37,16 @@ uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
 # === 🧹 PREPROCESSING ===
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
-    for col in df.select_dtypes(include=['object']).columns:
+    nilai_kolom = ["IPA", "IPS", "MTK", "BIN", "BING", "SUN", "PAI", "PKN", "PNJ", "SBDY", "PRK"]
+    for col in nilai_kolom:
         df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
-        try:
-            df[col] = df[col].astype(float)
-        except:
-            pass
+        df[col] = df[col].astype(float)
 
     imputer = SimpleImputer(strategy='mean')
-    df[df.columns] = imputer.fit_transform(df)
+    df[nilai_kolom] = imputer.fit_transform(df[nilai_kolom])
 
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
-    df["Keterampilan_Tertinggi"] = df.apply(
-        lambda row: max([row["PNJ"], row["SBDY"], row["PRK"]])
-        if pd.notna(row["PNJ"]) and pd.notna(row["SBDY"]) and pd.notna(row["PRK"]) else np.nan,
-        axis=1)
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
@@ -61,7 +55,6 @@ if uploaded_file is not None:
     # === 🔄 TRANSFORMASI ===
     X_scaled = scaler.fit_transform(X)
 
-    # Tampilkan hasil transformasi sebagai DataFrame
     df_scaled = pd.DataFrame(X_scaled, columns=fitur)
     st.subheader("📊 Hasil Transformasi (StandardScaler)")
     st.dataframe(df_scaled.head())
@@ -73,9 +66,8 @@ if uploaded_file is not None:
     else:
         st.write("### Data Awal", df.head())
 
-
     # === 🔍 EVALUASI K: ELBOW METHOD ===
-        st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
+    st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
     K = range(2, 11)
     for k in K:
@@ -98,12 +90,10 @@ if uploaded_file is not None:
 
     # === 🤖 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
     if st.button("Lakukan Klasterisasi"):
-        # K-Means
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         df['Cluster_KMeans'] = kmeans.labels_
         dbi_kmeans = davies_bouldin_score(X_scaled, df['Cluster_KMeans'])
 
-        # K-Medoids
         dist_matrix = calculate_distance_matrix(X_scaled)
         random.seed(42)
         initial_medoids = random.sample(range(len(X_scaled)), k)
@@ -127,18 +117,16 @@ if uploaded_file is not None:
             df['Cluster_KMeans'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax1)
             ax1.axis('equal')
             st.pyplot(fig1)
-            st.download_button("📥 Unduh Grafik Pie K-Means", data=fig1.savefig(fname := 'kmeans_pie.png') or open(fname, 'rb'), file_name='kmeans_pie.png')
 
             fig2 = plt.figure(figsize=(10, 8))
             ax2 = fig2.add_subplot(111, projection='3d')
-            scatter_kmeans = ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
+            scatter_kmeans = ax2.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMeans'], cmap='viridis')
             ax2.set_xlabel('Pengetahuan_Sains', labelpad=15)
             ax2.set_ylabel('Pengetahuan_Sosial', labelpad=15)
             ax2.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
             ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
             plt.tight_layout()
             st.pyplot(fig2)
-            st.download_button("📥 Unduh Grafik 3D K-Means", data=fig2.savefig(fname := 'kmeans_3d.png') or open(fname, 'rb'), file_name='kmeans_3d.png')
 
         with col2:
             st.subheader("🔸 K-Medoids Clustering")
@@ -147,21 +135,18 @@ if uploaded_file is not None:
             df['Cluster_KMedoids'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax3)
             ax3.axis('equal')
             st.pyplot(fig3)
-            st.download_button("📥 Unduh Grafik Pie K-Medoids", data=fig3.savefig(fname := 'kmedoids_pie.png') or open(fname, 'rb'), file_name='kmedoids_pie.png')
 
             fig4 = plt.figure(figsize=(10, 8))
             ax4 = fig4.add_subplot(111, projection='3d')
-            scatter_kmedoids = ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
+            scatter_kmedoids = ax4.scatter(X_scaled[:, 0], X_scaled[:, 1], X_scaled[:, 2], c=df['Cluster_KMedoids'], cmap='plasma')
             ax4.set_xlabel('Pengetahuan_Sains', labelpad=15)
             ax4.set_ylabel('Pengetahuan_Sosial', labelpad=15)
             ax4.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
             ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
             plt.tight_layout()
             st.pyplot(fig4)
-            st.download_button("📥 Unduh Grafik 3D K-Medoids", data=fig4.savefig(fname := 'kmedoids_3d.png') or open(fname, 'rb'), file_name='kmedoids_3d.png')
 
         # === 📊 VISUALISASI LANJUTAN ===
-# Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
         df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
@@ -173,7 +158,6 @@ if uploaded_file is not None:
         ax_pie.pie(kombinasi_pie.values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
         ax_pie.axis('equal')
         st.pyplot(fig_pie)
-        st.download_button("📥 Unduh Grafik Pie Pengetahuan vs Keterampilan", data=fig_pie.savefig(fname := 'gabungan_pie.png') or open(fname, 'rb'), file_name='gabungan_pie.png')
 
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
