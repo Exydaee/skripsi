@@ -194,7 +194,7 @@ if uploaded_file is not None:
         df['Gabungan'] = df.apply(
     lambda row: f"{'Sains' if round(row['Pengetahuan_Sains'], 2) > round(row['Pengetahuan_Sosial'], 2) else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
 )
-        gabungan_counts = df['Gabungan'].value_counts()
+        gabungan_counts = df['Gabungan'].value_counts().sort_index()
 
         st.subheader("📋 Tabel Data Gabungan untuk Verifikasi")
         st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Keterampilan_Tertinggi", "Gabungan"]].head(10))
