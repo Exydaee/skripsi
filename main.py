@@ -67,11 +67,11 @@ if uploaded_file is not None:
     # === 🔍 EVALUASI K: ELBOW METHOD ===
     st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     distortions = []
-    K = range(1, 11)
+    K = range(2, 11)  # Mulai dari 2 karena DBI dan Elbow tidak valid untuk k=1
     for k in K:
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         distortions.append(kmeans.inertia_)
-        st.write(f"k = {k}, inertia = {kmeans.inertia_:.2f}")  # Untuk debugging dan validasi
+        st.text(f"k = {k}, inertia = {kmeans.inertia_:.2f}")
 
     fig_elbow, ax_elbow = plt.subplots(figsize=(6, 4))
     ax_elbow.plot(K, distortions, 'bx-')
