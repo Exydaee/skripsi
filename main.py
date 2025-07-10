@@ -77,6 +77,7 @@ if uploaded_file is not None:
     ax_elbow.set_ylabel('Inertia')
     ax_elbow.set_title('Metode Elbow untuk Menentukan k')
     st.pyplot(fig_elbow)
+    st.download_button("📥 Unduh Grafik Elbow", data=fig_elbow.savefig(fname := 'elbow_plot.png') or open(fname, 'rb'), file_name='elbow_plot.png')
 
     k = st.number_input("Masukkan jumlah klaster (k) terbaik berdasarkan grafik elbow:", min_value=2, max_value=10, value=3, step=1)
 
@@ -100,7 +101,50 @@ if uploaded_file is not None:
 
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
-        # Diagram Gabungan Pengetahuan vs Keterampilan
+        
+
+        
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader("🔹 K-Means Clustering")
+            st.dataframe(df[[*fitur, 'Cluster_KMeans']].head())
+            fig1, ax1 = plt.subplots()
+            df['Cluster_KMeans'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax1)
+            ax1.axis('equal')
+            st.pyplot(fig1)
+            st.download_button("📥 Unduh Grafik Pie K-Means", data=fig1.savefig(fname := 'kmeans_pie.png') or open(fname, 'rb'), file_name='kmeans_pie.png')
+            fig2 = plt.figure(figsize=(10, 8))
+            ax2 = fig2.add_subplot(111, projection='3d')
+            scatter_kmeans = ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
+            ax2.set_xlabel('Pengetahuan_Sains', labelpad=15)
+            ax2.set_ylabel('Pengetahuan_Sosial', labelpad=15)
+            ax2.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
+            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
+            plt.tight_layout()
+            st.pyplot(fig2)
+            st.download_button("📥 Unduh Grafik 3D K-Means", data=fig2.savefig(fname := 'kmeans_3d.png') or open(fname, 'rb'), file_name='kmeans_3d.png')
+
+        with col2:
+            st.subheader("🔸 K-Medoids Clustering")
+            st.dataframe(df[[*fitur, 'Cluster_KMedoids']].head())
+            fig3, ax3 = plt.subplots()
+            df['Cluster_KMedoids'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax3)
+            ax3.axis('equal')
+            st.pyplot(fig3)
+            st.download_button("📥 Unduh Grafik Pie K-Medoids", data=fig3.savefig(fname := 'kmedoids_pie.png') or open(fname, 'rb'), file_name='kmedoids_pie.png')
+            fig4 = plt.figure(figsize=(10, 8))
+            ax4 = fig4.add_subplot(111, projection='3d')
+            scatter_kmedoids = ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
+            ax4.set_xlabel('Pengetahuan_Sains', labelpad=15)
+            ax4.set_ylabel('Pengetahuan_Sosial', labelpad=15)
+            ax4.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
+            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
+            plt.tight_layout()
+            st.pyplot(fig4)
+            st.download_button("📥 Unduh Grafik 3D K-Medoids", data=fig4.savefig(fname := 'kmedoids_3d.png') or open(fname, 'rb'), file_name='kmedoids_3d.png')
+
+        # Diagram Gabungan Pie Dominasi Pengetahuan vs Keterampilan Tertinggi
         df['Dominan_Pengetahuan'] = np.where(df['Pengetahuan_Sains'] >= df['Pengetahuan_Sosial'], 'Sains', 'Sosial')
         df['Asal_Keterampilan_Tertinggi'] = df[['PNJ', 'SBDY', 'PRK']].idxmax(axis=1)
         kombinasi_pie = df.groupby(['Dominan_Pengetahuan', 'Asal_Keterampilan_Tertinggi']).size()
@@ -111,53 +155,21 @@ if uploaded_file is not None:
         ax_pie.pie(kombinasi_pie.values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
         ax_pie.axis('equal')
         st.pyplot(fig_pie)
+        st.download_button("📥 Unduh Grafik Pie Pengetahuan vs Keterampilan", data=fig_pie.savefig(fname := 'gabungan_pie.png') or open(fname, 'rb'), file_name='gabungan_pie.png')
 
-        # Diagram Gabungan Klaster
-        df['Gabungan'] = df['Cluster_KMeans'].astype(str) + '-' + df['Cluster_KMedoids'].astype(str)
-        gabungan_counts = df['Gabungan'].value_counts().sort_index()
-        fig_gabungan, ax_gabungan = plt.subplots(figsize=(6, 4))
-        gabungan_counts.plot(kind='bar', color='mediumseagreen', ax=ax_gabungan)
-        ax_gabungan.set_title('Diagram Gabungan Klaster K-Means & K-Medoids')
-        ax_gabungan.set_xlabel('Kombinasi KMeans-KMedoids')
-        ax_gabungan.set_ylabel('Jumlah Data')
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        st.pyplot(fig_gabungan)
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("🔹 K-Means Clustering")
-            st.dataframe(df[[*fitur, 'Cluster_KMeans']].head())
-            fig1, ax1 = plt.subplots()
-            df['Cluster_KMeans'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax1)
-            ax1.axis('equal')
-            st.pyplot(fig1)
-            fig2 = plt.figure(figsize=(10, 8))
-            ax2 = fig2.add_subplot(111, projection='3d')
-            scatter_kmeans = ax2.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMeans'], cmap='viridis')
-            ax2.set_xlabel('Pengetahuan_Sains', labelpad=15)
-            ax2.set_ylabel('Pengetahuan_Sosial', labelpad=15)
-            ax2.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax2.legend(*scatter_kmeans.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
-            plt.tight_layout()
-            st.pyplot(fig2)
-
-        with col2:
-            st.subheader("🔸 K-Medoids Clustering")
-            st.dataframe(df[[*fitur, 'Cluster_KMedoids']].head())
-            fig3, ax3 = plt.subplots()
-            df['Cluster_KMedoids'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, ax=ax3)
-            ax3.axis('equal')
-            st.pyplot(fig3)
-            fig4 = plt.figure(figsize=(10, 8))
-            ax4 = fig4.add_subplot(111, projection='3d')
-            scatter_kmedoids = ax4.scatter(df[fitur[0]], df[fitur[1]], df[fitur[2]], c=df['Cluster_KMedoids'], cmap='plasma')
-            ax4.set_xlabel('Pengetahuan_Sains', labelpad=15)
-            ax4.set_ylabel('Pengetahuan_Sosial', labelpad=15)
-            ax4.set_zlabel('Nilai_Keterampilan_Tertinggi', labelpad=15)
-            ax4.legend(*scatter_kmedoids.legend_elements(), title="Cluster", loc="lower left", bbox_to_anchor=(1.05, 0.5))
-            plt.tight_layout()
-            st.pyplot(fig4)
+        # ZIP semua grafik
+        import zipfile, io
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
+            for name in ["elbow_plot.png", "kmeans_pie.png", "kmeans_3d.png", "kmedoids_pie.png", "kmedoids_3d.png", "gabungan_pie.png"]:
+                with open(name, "rb") as f:
+                    zip_file.writestr(name, f.read())
+        zip_buffer.seek(0)
+        st.download_button(
+            label="📦 Unduh Semua Grafik (.zip)",
+            data=zip_buffer,
+            file_name="semua_grafik_visualisasi.zip",
+            mime="application/zip"
+        ) or open(fname, 'rb'), file_name='gabungan_pie.png')
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
