@@ -39,12 +39,8 @@ st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** 
 # 1. SELEKSI DATA
 # =====================================
 uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
-# =====================================
-# 2. PREPROCESSING
-# =====================================
-
 if uploaded_file is not None:
-    st.subheader("📌 Tahap 1: Seleksi Data")
+    st.subheader("📌 Data Awal")
     nilai_kolom = ["IPA", "IPS", "MTK", "BIN", "BING", "SUN", "PAI", "PKN", "PNJ", "SBDY", "PRK"]
     
 
@@ -52,7 +48,9 @@ if uploaded_file is not None:
     
     st.write("📄 Data awal sebelum dilakukan proses apapun:")
     st.dataframe(df.head())
-
+# =====================================
+# 2. PREPROCESSING
+# =====================================
     for col in nilai_kolom:
         df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
         df[col] = df[col].astype(float)
@@ -66,7 +64,7 @@ if uploaded_file is not None:
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
     df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
-    st.subheader("🧹 Tahap 2: Preprocessing Data")
+    st.subheader("🧹 Preprocessing Data")
     st.write("📌 Data setelah konversi simbol dan imputasi nilai kosong:")
     st.dataframe(df[nilai_kolom].head())
 
@@ -76,7 +74,7 @@ if uploaded_file is not None:
     # =====================================
     # 3. TRANSFORMASI
     # =====================================
-    st.subheader("🔄 Tahap 3: Transformasi Data")
+    st.subheader("🔄 Transformasi Data")
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
@@ -89,7 +87,7 @@ if uploaded_file is not None:
     # =====================================
     # 4. DATA MINING
     # =====================================
-    st.subheader("🤖 Tahap 4: Klasterisasi (Data Mining)")
+    st.subheader("🤖 Klasterisasi (Data Mining)")
     distortions = []
     K_range = range(2, 11)
     for k_val in K_range:
@@ -135,7 +133,7 @@ if uploaded_file is not None:
         # =====================================
         # 6. INTERPRETASI DAN VISUALISASI
         # =====================================
-        st.subheader("📌 Tahap 6: Interpretasi dan Visualisasi")
+        st.subheader("📌 Interpretasi dan Visualisasi")
 
         def generate_colors(n, cmap_name='tab10'):
             cmap = get_cmap(cmap_name)
