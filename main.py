@@ -1,3 +1,4 @@
+# === Library dan Konfigurasi Awal ===
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,8 +11,9 @@ from pyclustering.utils import calculate_distance_matrix
 from sklearn.impute import SimpleImputer
 from mpl_toolkits.mplot3d import Axes3D
 import random
+from matplotlib.cm import get_cmap
 
-# Custom CSS for background and bright theme
+# Konfigurasi halaman dan latar belakang
 page_bg_img = '''
 <style>
 body {
@@ -31,12 +33,26 @@ st.set_page_config(page_title="Student Clustering", layout="wide")
 st.title("📊 Klasterisasi Pengetahuan dan Keterampilan Siswa: Perbandingan K-Means vs K-Medoids")
 st.markdown("Upload data siswa dan lakukan klasterisasi menggunakan **K-Means** dan **K-Medoids** secara bersamaan.")
 
-uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
+# === Tahapan Knowledge Discovery in Databases (KDD) ===
 
-# === 🧹 PREPROCESSING ===
+# =====================================
+# 1. SELEKSI DATA
+# =====================================
+uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
+# =====================================
+# 2. PREPROCESSING
+# =====================================
+
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, delimiter=';')
+    st.subheader("📌 Tahap 1: Seleksi Data")
     nilai_kolom = ["IPA", "IPS", "MTK", "BIN", "BING", "SUN", "PAI", "PKN", "PNJ", "SBDY", "PRK"]
+    st.write("Kolom yang dipilih dari file CSV:")
+    st.write(nilai_kolom)
+
+    df = pd.read_csv(uploaded_file, delimiter=';')
+    st.write("📄 Data awal sebelum dilakukan proses apapun:")
+    st.dataframe(df.head())
+
     for col in nilai_kolom:
         df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
         df[col] = df[col].astype(float)
@@ -44,28 +60,44 @@ if uploaded_file is not None:
     imputer = SimpleImputer(strategy='mean')
     df[nilai_kolom] = imputer.fit_transform(df[nilai_kolom])
 
+    # Pengelompokan nilai pengetahuan dan keterampilan (bagian dari preprocessing)
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
     df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
-    st.subheader("🗃️ Data Awal")
-    st.dataframe(df.head())
+    st.subheader("🧹 Tahap 2: Preprocessing Data")
+st.write("Data setelah preprocessing termasuk konversi nilai, imputasi, dan penambahan fitur:")
+st.dataframe(df.head())
+    st.write("Data setelah pembersihan dan imputasi nilai kosong:")
+    st.dataframe(df[nilai_kolom].head())
+
+    # =====================================
+    # 3. TRANSFORMASI
+    # =====================================
+    st.subheader("🔄 Tahap 3: Transformasi Data")
+    st.write("Fitur baru yang ditambahkan:")
+    st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi", "Keterampilan_Tertinggi"]].head())
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
     scaler = StandardScaler()
-    # === 🔄 TRANSFORMASI ===
     X_scaled = scaler.fit_transform(X)
 
-    # === 🔍 EVALUASI K: ELBOW METHOD ===
+    st.write("Data hasil transformasi menggunakan StandardScaler:")
+    st.write(pd.DataFrame(X_scaled, columns=fitur).head())
+
+    # =====================================
+    # 4. DATA MINING
+    # =====================================
+    st.subheader("🤖 Tahap 4: Klasterisasi (Data Mining)")
     distortions = []
     K_range = range(2, 11)
     for k_val in K_range:
         km = KMeans(n_clusters=k_val, random_state=42).fit(X_scaled)
         distortions.append(km.inertia_)
 
-    st.subheader("📈 Grafik Elbow untuk Menentukan k Optimal")
+    st.subheader("📈 Elbow Method untuk Menentukan k Optimal")
     fig_elbow, ax_elbow = plt.subplots()
     ax_elbow.plot(K_range, distortions, 'bo-')
     ax_elbow.set_xlabel("Jumlah Klaster (k)")
@@ -75,7 +107,6 @@ if uploaded_file is not None:
 
     k = st.slider("Pilih jumlah klaster (k):", min_value=2, max_value=10, value=3)
 
-    # === 🤖 DATA MINING: K-MEANS & K-MEDOIDS CLUSTERING ===
     if st.button("Lakukan Klasterisasi"):
         kmeans = KMeans(n_clusters=k, random_state=42).fit(X_scaled)
         df['Cluster_KMeans'] = kmeans.labels_
@@ -96,10 +127,16 @@ if uploaded_file is not None:
         df['Cluster_KMedoids'] = labels
         dbi_kmedoids = davies_bouldin_score(X_scaled, df['Cluster_KMedoids'])
 
+        # =====================================
+        # 5. EVALUASI
+        # =====================================
+        st.subheader("📊 Tahap 5: Evaluasi")
         st.success(f"Davies-Bouldin Index (K-Means): {dbi_kmeans:.4f} | K-Medoids: {dbi_kmedoids:.4f}")
 
-        # === VISUALISASI CLUSTER ===
-        from matplotlib.cm import get_cmap
+        # =====================================
+        # 6. INTERPRETASI DAN VISUALISASI
+        # =====================================
+        st.subheader("📌 Tahap 6: Interpretasi dan Visualisasi")
 
         def generate_colors(n, cmap_name='tab10'):
             cmap = get_cmap(cmap_name)
@@ -117,18 +154,6 @@ if uploaded_file is not None:
         df['Warna_KMeans'] = df['Cluster_KMeans'].map(cluster_colors_kmeans)
         df['Warna_KMedoids'] = df['Cluster_KMedoids'].map(cluster_colors_kmedoids)
 
-        legend_elements_kmeans = [
-            plt.Line2D([0], [0], marker='o', color='w', label=f'Klaster {i}',
-                       markerfacecolor=color, markersize=10)
-            for i, color in cluster_colors_kmeans.items()
-        ]
-
-        legend_elements_kmedoids = [
-            plt.Line2D([0], [0], marker='o', color='w', label=f'Klaster {i}',
-                       markerfacecolor=color, markersize=10)
-            for i, color in cluster_colors_kmedoids.items()
-        ]
-
         fig = plt.figure(figsize=(14, 6))
         ax1 = fig.add_subplot(121, projection='3d')
         ax1.scatter(
@@ -139,7 +164,6 @@ if uploaded_file is not None:
         ax1.set_xlabel("Pengetahuan Sains")
         ax1.set_ylabel("Pengetahuan Sosial")
         ax1.set_zlabel("Nilai Keterampilan Tertinggi")
-        ax1.legend(handles=legend_elements_kmeans, title='Klaster')
 
         ax2 = fig.add_subplot(122, projection='3d')
         ax2.scatter(
@@ -150,12 +174,10 @@ if uploaded_file is not None:
         ax2.set_xlabel("Pengetahuan Sains")
         ax2.set_ylabel("Pengetahuan Sosial")
         ax2.set_zlabel("Nilai Keterampilan Tertinggi")
-        ax2.legend(handles=legend_elements_kmedoids, title='Klaster')
 
         plt.tight_layout()
         st.pyplot(fig)
 
-        # === PIE CHART DISTRIBUSI K-MEANS ===
         st.subheader("📊 Distribusi Klaster K-Means")
         fig_pie_kmeans, ax_kmeans = plt.subplots()
         df['Cluster_KMeans'].value_counts().sort_index().plot.pie(
@@ -166,7 +188,6 @@ if uploaded_file is not None:
         ax_kmeans.set_title("Distribusi Klaster - KMeans")
         st.pyplot(fig_pie_kmeans)
 
-        # === PIE CHART DISTRIBUSI K-MEDOIDS ===
         st.subheader("📊 Distribusi Klaster K-Medoids")
         fig_pie_kmedoids, ax_kmedoids = plt.subplots()
         df['Cluster_KMedoids'].value_counts().sort_index().plot.pie(
@@ -177,8 +198,7 @@ if uploaded_file is not None:
         ax_kmedoids.set_title("Distribusi Klaster - KMedoids")
         st.pyplot(fig_pie_kmedoids)
 
-        # === DIAGRAM PIE GABUNGAN ===
-        st.subheader("🥧 Diagram Pie Gabungan: Dominasi Pengetahuan dan Keterampilan Tertinggi")
+        st.subheader("🥧 Diagram Pie Gabungan")
         df['Gabungan'] = df.apply(
             lambda row: f"{'Sains' if row['Pengetahuan_Sains'] > row['Pengetahuan_Sosial'] else 'Sosial'} - {row['Keterampilan_Tertinggi']}", axis=1
         )
@@ -195,5 +215,6 @@ if uploaded_file is not None:
         ax_pie.axis('equal')
         plt.tight_layout()
         st.pyplot(fig_pie)
+
 else:
     st.info("Silakan unggah file CSV terlebih dahulu.")
