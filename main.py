@@ -52,6 +52,8 @@ if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=';')
     st.write("📄 Data awal sebelum dilakukan proses apapun:")
     st.dataframe(df.head())
+    st.write("📄 Data awal sebelum dilakukan proses apapun:")
+    st.dataframe(df.head())
 
     for col in nilai_kolom:
         df[col] = df[col].replace('-', np.nan).replace(',', '.', regex=True)
@@ -67,10 +69,8 @@ if uploaded_file is not None:
     df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
     st.subheader("🧹 Tahap 2: Preprocessing Data")
-st.write("Data setelah preprocessing termasuk konversi nilai, imputasi, dan penambahan fitur:")
-st.dataframe(df.head())
-    st.write("Data setelah pembersihan dan imputasi nilai kosong:")
-    st.dataframe(df[nilai_kolom].head())
+    st.write("Data setelah preprocessing termasuk konversi nilai, imputasi, dan penambahan fitur:")
+    st.dataframe(df.head())
 
     # =====================================
     # 3. TRANSFORMASI
