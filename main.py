@@ -46,12 +46,10 @@ uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
 if uploaded_file is not None:
     st.subheader("📌 Tahap 1: Seleksi Data")
     nilai_kolom = ["IPA", "IPS", "MTK", "BIN", "BING", "SUN", "PAI", "PKN", "PNJ", "SBDY", "PRK"]
-    st.write("Kolom yang dipilih dari file CSV:")
-    st.write(nilai_kolom)
+    
 
     df = pd.read_csv(uploaded_file, delimiter=';')
-    st.write("📄 Data awal sebelum dilakukan proses apapun:")
-    st.dataframe(df.head())
+    
     st.write("📄 Data awal sebelum dilakukan proses apapun:")
     st.dataframe(df.head())
 
@@ -62,22 +60,23 @@ if uploaded_file is not None:
     imputer = SimpleImputer(strategy='mean')
     df[nilai_kolom] = imputer.fit_transform(df[nilai_kolom])
 
-    # Pengelompokan nilai pengetahuan dan keterampilan (bagian dari preprocessing)
+    # Pengelompokan nilai pengetahuan dan keterampilan
     df["Pengetahuan_Sains"] = df[["IPA", "MTK", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Pengetahuan_Sosial"] = df[["IPS", "BIN", "BING", "SUN", "PAI", "PKN"]].mean(axis=1)
     df["Nilai_Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].max(axis=1)
     df["Keterampilan_Tertinggi"] = df[["PNJ", "SBDY", "PRK"]].idxmax(axis=1).replace({"PNJ": "Pendidikan Jasmani dan Olahraga", "SBDY": "Seni Budaya", "PRK": "Prakarya"})
 
     st.subheader("🧹 Tahap 2: Preprocessing Data")
-    st.write("Data setelah preprocessing termasuk konversi nilai, imputasi, dan penambahan fitur:")
-    st.dataframe(df.head())
+    st.write("📌 Data setelah konversi simbol dan imputasi nilai kosong:")
+    st.dataframe(df[nilai_kolom].head())
+
+    st.write("📌 Data setelah penambahan fitur Pengetahuan dan Keterampilan:")
+    st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi", "Keterampilan_Tertinggi"]].head())
 
     # =====================================
     # 3. TRANSFORMASI
     # =====================================
     st.subheader("🔄 Tahap 3: Transformasi Data")
-    st.write("Fitur baru yang ditambahkan:")
-    st.dataframe(df[["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi", "Keterampilan_Tertinggi"]].head())
 
     fitur = ["Pengetahuan_Sains", "Pengetahuan_Sosial", "Nilai_Keterampilan_Tertinggi"]
     X = df[fitur].values
